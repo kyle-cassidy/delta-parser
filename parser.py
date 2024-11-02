@@ -14,7 +14,6 @@ from pathlib import Path
 from rich.console import Console
 from unstructured.partition.auto import partition
 from urllib.parse import urlparse
-import os
 import requests
 
 console = Console()
