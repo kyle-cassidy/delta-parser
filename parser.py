@@ -29,12 +29,14 @@ def is_url(string):
         return False
 
 
-def process_document(source, strategy="fast"):
+def process_document(source, strategy="hi_res"):
     """Process a document from URL, local file, or directory using specified strategy.
 
     Args:
         source (str): URL, file path, or directory path
-        strategy (str): One of 'fast', 'hires', 'ocr_only', 'auto'
+        strategy (str): One of 'fast', 'hi_res', 'ocr_only', 'auto'
+    Returns:
+        dict: JSON formatted extraction results
     """
     if is_url(source):
         console.print(f"[blue]Downloading from URL: {source}[/blue]")
@@ -48,7 +50,7 @@ def process_document(source, strategy="fast"):
         if source_path.is_dir():
             console.print(f"[blue]Processing directory: {source}[/blue]")
             elements = []
-            # Full list of supported extensions from Unstructured docs([1](https://docs.unstructured.io/welcome))
+            # Full list of supported extensions from Unstructured docs
             supported_extensions = [
                 ".bmp",
                 ".csv",
@@ -91,7 +93,38 @@ def process_document(source, strategy="fast"):
             console.print(f"[blue]Processing local file: {source}[/blue]")
             elements = partition(source, strategy=strategy)
 
-    return elements
+    # Enhanced JSON structure for form-like content
+    output = []
+    current_key = None
+
+    for element in elements:
+        text = str(element)
+        element_type = element.__class__.__name__
+
+        # Convert metadata to dict if it exists
+        metadata = {}
+        if hasattr(element, "metadata"):
+            metadata = {
+                k: str(v)
+                for k, v in element.metadata.__dict__.items()
+                if not k.startswith("_")
+            }
+
+        # Basic form field detection
+        if ":" in text:
+            key, value = text.split(":", 1)  # Split on first occurrence of ":"
+            output.append(
+                {
+                    "type": "form_field",
+                    "key": key.strip(),
+                    "value": value.strip(),
+                    "metadata": metadata,
+                }
+            )
+        else:
+            output.append({"type": element_type, "text": text, "metadata": metadata})
+
+    return output
 
 
 def main():
@@ -121,12 +154,16 @@ def main():
     elements = process_document(args.source, args.strategy)
 
     # Output handling
-    output = "\n".join([str(element) for element in elements])
     if args.output:
+        import json
+
         with open(args.output, "w") as f:
-            f.write(output)
+            json.dump({"elements": elements}, f, indent=2)
+        console.print(f"[green]Output written to: {args.output}[/green]")
     else:
-        print(output)
+        import json
+
+        print(json.dumps({"elements": elements}, indent=2))
 
 
 if __name__ == "__main__":
