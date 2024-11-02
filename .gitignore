@@ -10,5 +10,4 @@ wheels/
 .venv
 
 example-docs/
-output/CT.csv
-output/CT.html
+output/

@@ -134,23 +134,12 @@ def main():
     parser.add_argument(
         "--strategy",
         "-s",
-        choices=["fast", "hi_res", "ocr_only", "auto"],  # Changed 'hires' to 'hi_res'
-        default="hi_res",  # Changed default to hi_res
-        help="Strategy to use for processing (fast, hi_res, ocr_only, auto). Use hi_res for forms.",
-    )
-    parser.add_argument(
-        "--form-mode",
-        "-f",
-        action="store_true",
-        help="Optimize extraction for form-based PDFs",
+        choices=["fast", "hi_res", "ocr_only", "auto"],
+        default="hi_res",
+        help="Strategy to use for processing (fast, hi_res, ocr_only, auto).",
     )
 
     args = parser.parse_args()
-
-    # Use hi_res strategy when form mode is enabled
-    if args.form_mode and not args.strategy:
-        args.strategy = "hi_res"
-
     elements = process_document(args.source, args.strategy)
 
     # Output handling
